@@ -23,6 +23,17 @@ const square = z => z * z;
 function compose(middlewares) {
   return () => {
     return dispatch(0)
+    function dispatch(i) {
+      let fn = middlewares[i];
+      if (!fn) {
+        return Promise.resolve()
+      }
+      return Promise.resolve(
+        fn(function next() {
+          return dispatch(i + 1)
+        })
+      )
+    }
   }
 }
 
@@ -40,3 +51,14 @@ async function fn2(next) {
 function fn3(next) {
   console.log("fn3");
 }
+
+function delay() {
+  return new Promise((reslove, reject) => {
+    setTimeout(() => {
+      reslove();
+    }, 2000);
+  });
+}
+const middlewares = [fn1, fn2, fn3];
+const finalFn = compose(middlewares);
+finalFn();
